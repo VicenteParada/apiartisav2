@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Perfil de Camión - ARTISA</title>
+  <meta name="description" content="Perfil detallado del equipo" />
+  <meta name="keywords" content="camión, perfil, equipo, artisa" />
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon" />
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon" />
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,700&display=swap"
+    rel="stylesheet" />
+
+  <!-- CSS -->
+  <link href="assets/css/style.css" rel="stylesheet" />
+</head>
+
+<body>
+  <header>
+    <div class="container">
+      <h1>Buscar Camión</h1>
+      <form onsubmit="buscarEquipo(event)">
+        <input type="text" id="dominioInput" placeholder="Ingrese dominio o nombre del camión" required />
+        <button type="submit">Buscar</button>
+      </form>
+    </div>
+  </header>
+
+  <main>
+    <section class="mapa">
+      <div id="map" style="height: 400px; background-color: #e3e3e3; display: flex; align-items: center; justify-content: center;">
+        <p>Mapa en construcción</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 ARTISA. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script>
+    async function buscarEquipo(event) {
+      event.preventDefault();
+      const texto = document.getElementById('dominioInput').value.trim().toUpperCase();
+
+      if (!texto) {
+        alert("Por favor ingresa un valor");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/equipo/buscar?texto=${texto}`);
+        if (!response.ok) {
+          throw new Error("Equipo no encontrado");
+        }
+        const equipo = await response.json();
+        window.location.href = `perfil_camion.html?dominio=${equipo.assetId}`;
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+  </script>
+</body>
+
+</html>

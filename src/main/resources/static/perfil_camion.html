@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Perfil de Camión - ARTISA</title>
+  <meta name="description" content="Perfil detallado del equipo" />
+  <meta name="keywords" content="camión, perfil, equipo, artisa" />
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon" />
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon" />
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect" />
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,700&display=swap"
+    rel="stylesheet" />
+
+  <!-- CSS -->
+  <link href="assets/css/style.css" rel="stylesheet" />
+</head>
+
+<body>
+  <header>
+    <div class="container">
+      <h1>Perfil del Camión</h1>
+      <a href="index.html">← Volver a buscar</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="camion-detalle">
+      <div class="container">
+        <h2 id="nombre"></h2>
+        <ul>
+          <li><strong>Patente:</strong> <span id="dominio"></span></li>
+          <li><strong>Evento:</strong> <span id="evento"></span></li>
+          <li><strong>Fecha del Reporte:</strong> <span id="fecha"></span></li>
+          <li><strong>Ubicación:</strong> <span id="ubicacion"></span></li>
+          <li><strong>Velocidad:</strong> <span id="velocidad"></span> km/h</li>
+          <li><strong>Odómetro:</strong> <span id="odometro"></span> km</li>
+          <li><strong>Horómetro:</strong> <span id="horometro"></span> hrs</li>
+          <li><strong>Encendido:</strong> <span id="ignicion"></span></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="mapa">
+      <div id="map" style="height: 400px; background-color: #e3e3e3; display: flex; align-items: center; justify-content: center;">
+        <p>Mapa en construcción</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 ARTISA. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+  <script>
+    async function cargarPerfil() {
+      const params = new URLSearchParams(window.location.search);
+      const dominio = params.get("dominio");
+
+      if (!dominio) {
+        alert("No se ha indicado un dominio");
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/equipo/buscar?texto=${dominio}`);
+        if (!response.ok) {
+          throw new Error("No se encontró el equipo");
+        }
+
+        const data = await response.json();
+
+        document.getElementById("nombre").textContent = data.nombre || data.assetName;
+        document.getElementById("dominio").textContent = data.dominio || data.assetId;
+        document.getElementById("evento").textContent = data.lastEvent || data.eventName;
+        document.getElementById("fecha").textContent = data.reportDate;
+        document.getElementById("ubicacion").textContent = data.location;
+        document.getElementById("velocidad").textContent = data.velocidad || data.speed;
+        document.getElementById("odometro").textContent = data.odometro || data.odometer;
+        document.getElementById("horometro").textContent = data.horometro || data.hourmeter;
+        document.getElementById("ignicion").textContent = data.ignition === 1 ? "Encendido" : "Apagado";
+
+      } catch (error) {
+        alert("Error cargando el perfil: " + error.message);
+      }
+    }
+
+    window.onload = cargarPerfil;
+  </script>
+</body>
+
+</html>
