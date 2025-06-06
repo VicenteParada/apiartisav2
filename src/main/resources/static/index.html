@@ -15,8 +15,7 @@
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect" />
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,700&display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,700&display=swap" rel="stylesheet" />
 
   <!-- CSS -->
   <link href="assets/css/style.css" rel="stylesheet" />
@@ -25,19 +24,24 @@
 <body>
   <header>
     <div class="container">
-      <h1>Buscar Camión</h1>
-      <form onsubmit="buscarEquipo(event)">
-        <input type="text" id="dominioInput" placeholder="Ingrese dominio o nombre del camión" required />
-        <button type="submit">Buscar</button>
-      </form>
+      <h1>Perfil del Camión</h1>
+      <a href="index.html">← Volver al buscador</a>
     </div>
   </header>
 
   <main>
-    <section class="mapa">
-      <div id="map" style="height: 400px; background-color: #e3e3e3; display: flex; align-items: center; justify-content: center;">
-        <p>Mapa en construcción</p>
+    <section class="detalle-equipo">
+      <div class="container">
+        <h2>Datos del Camión</h2>
+        <p><strong>Dominio:</strong> <span id="assetId">Cargando...</span></p>
+        <p><strong>Nombre:</strong> <span id="assetName">Cargando...</span></p>
+        <p><strong>Ubicación:</strong> <span id="ubicacion">Cargando...</span></p>
+        <p><strong>Odómetro:</strong> <span id="odometro">Cargando...</span></p>
       </div>
+    </section>
+
+    <section class="mapa">
+      <div id="map" style="height: 400px;"></div>
     </section>
   </main>
 
@@ -47,27 +51,47 @@
     </div>
   </footer>
 
-  <script>
-    async function buscarEquipo(event) {
-      event.preventDefault();
-      const texto = document.getElementById('dominioInput').value.trim().toUpperCase();
+  <!-- Leaflet Map JS (u otro si estás usando uno distinto) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-      if (!texto) {
-        alert("Por favor ingresa un valor");
+  <script>
+    async function cargarDatosEquipo() {
+      const params = new URLSearchParams(window.location.search);
+      const dominio = params.get('dominio');
+      if (!dominio) {
+        alert("No se proporcionó dominio");
         return;
       }
 
       try {
-        const response = await fetch(`/api/equipo/buscar?texto=${texto}`);
-        if (!response.ok) {
-          throw new Error("Equipo no encontrado");
-        }
+        const response = await fetch(`/api/equipo/buscar?texto=${dominio}`);
+        if (!response.ok) throw new Error("No se encontró el equipo");
+
         const equipo = await response.json();
-        window.location.href = `perfil_camion.html?dominio=${equipo.assetId}`;
-      } catch (error) {
-        alert(error.message);
+
+        document.getElementById("assetId").textContent = equipo.assetId || "N/A";
+        document.getElementById("assetName").textContent = equipo.assetName || "N/A";
+        document.getElementById("ubicacion").textContent = equipo.location || "N/A";
+        document.getElementById("odometro").textContent = equipo.odometer != null ? equipo.odometer.toFixed(2) + " km" : "N/A";
+
+        // Crear mapa y marcador
+        const map = L.map('map').setView([equipo.latitude, equipo.longitude], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.marker([equipo.latitude, equipo.longitude])
+          .addTo(map)
+          .bindPopup(`Camión: ${equipo.assetId}<br>Ubicación: ${equipo.location}`)
+          .openPopup();
+
+      } catch (err) {
+        alert("Error al cargar los datos: " + err.message);
       }
     }
+
+    window.onload = cargarDatosEquipo;
   </script>
 </body>
 

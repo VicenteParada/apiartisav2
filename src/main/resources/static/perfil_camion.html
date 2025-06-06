@@ -15,8 +15,7 @@
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect" />
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,700&display=swap"
-    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,700&display=swap" rel="stylesheet" />
 
   <!-- CSS -->
   <link href="assets/css/style.css" rel="stylesheet" />
@@ -33,24 +32,22 @@
   <main>
     <section class="camion-detalle">
       <div class="container">
-        <h2 id="nombre"></h2>
+        <h2 id="nombre">Cargando nombre...</h2>
         <ul>
-          <li><strong>Patente:</strong> <span id="dominio"></span></li>
-          <li><strong>Evento:</strong> <span id="evento"></span></li>
-          <li><strong>Fecha del Reporte:</strong> <span id="fecha"></span></li>
-          <li><strong>Ubicación:</strong> <span id="ubicacion"></span></li>
-          <li><strong>Velocidad:</strong> <span id="velocidad"></span> km/h</li>
-          <li><strong>Odómetro:</strong> <span id="odometro"></span> km</li>
-          <li><strong>Horómetro:</strong> <span id="horometro"></span> hrs</li>
-          <li><strong>Encendido:</strong> <span id="ignicion"></span></li>
+          <li><strong>Patente:</strong> <span id="dominio">-</span></li>
+          <li><strong>Evento:</strong> <span id="evento">-</span></li>
+          <li><strong>Fecha del Reporte:</strong> <span id="fecha">-</span></li>
+          <li><strong>Ubicación:</strong> <span id="ubicacion">-</span></li>
+          <li><strong>Velocidad:</strong> <span id="velocidad">-</span> km/h</li>
+          <li><strong>Odómetro:</strong> <span id="odometro">-</span> km</li>
+          <li><strong>Horómetro:</strong> <span id="horometro">-</span> hrs</li>
+          <li><strong>Encendido:</strong> <span id="ignicion">-</span></li>
         </ul>
       </div>
     </section>
 
     <section class="mapa">
-      <div id="map" style="height: 400px; background-color: #e3e3e3; display: flex; align-items: center; justify-content: center;">
-        <p>Mapa en construcción</p>
-      </div>
+      <div id="map" style="height: 400px;"></div>
     </section>
   </main>
 
@@ -59,6 +56,10 @@
       <p>&copy; 2025 ARTISA. Todos los derechos reservados.</p>
     </div>
   </footer>
+
+  <!-- Leaflet Map JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <script>
     async function cargarPerfil() {
@@ -71,23 +72,36 @@
       }
 
       try {
-        const response = await fetch(`/api/equipo/buscar?texto=${dominio}`);
-        if (!response.ok) {
-          throw new Error("No se encontró el equipo");
-        }
+        const response = await fetch(`/api/equipo/buscar?texto=${encodeURIComponent(dominio)}`);
+        if (!response.ok) throw new Error("No se encontró el equipo");
 
         const data = await response.json();
 
-        document.getElementById("nombre").textContent = data.nombre || data.assetName;
-        document.getElementById("dominio").textContent = data.dominio || data.assetId;
-        document.getElementById("evento").textContent = data.lastEvent || data.eventName;
-        document.getElementById("fecha").textContent = data.reportDate;
-        document.getElementById("ubicacion").textContent = data.location;
-        document.getElementById("velocidad").textContent = data.velocidad || data.speed;
-        document.getElementById("odometro").textContent = data.odometro || data.odometer;
-        document.getElementById("horometro").textContent = data.horometro || data.hourmeter;
+        // Cargar datos al DOM
+        document.getElementById("nombre").textContent = data.nombre || data.assetName || "Desconocido";
+        document.getElementById("dominio").textContent = data.dominio || data.assetId || "N/A";
+        document.getElementById("evento").textContent = data.lastEvent || data.eventName || "Sin eventos";
+        document.getElementById("fecha").textContent = data.reportDate || "Sin fecha";
+        document.getElementById("ubicacion").textContent = data.location || "Sin ubicación";
+        document.getElementById("velocidad").textContent = data.velocidad ?? data.speed ?? "N/A";
+        document.getElementById("odometro").textContent = data.odometro ?? data.odometer ?? "N/A";
+        document.getElementById("horometro").textContent = data.horometro ?? data.hourmeter ?? "N/A";
         document.getElementById("ignicion").textContent = data.ignition === 1 ? "Encendido" : "Apagado";
 
+        // Mapa
+        if (data.latitude && data.longitude) {
+          const map = L.map("map").setView([data.latitude, data.longitude], 15);
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors"
+          }).addTo(map);
+
+          L.marker([data.latitude, data.longitude])
+            .addTo(map)
+            .bindPopup(`Camión ${data.assetId || data.dominio}<br>${data.location}`)
+            .openPopup();
+        } else {
+          document.getElementById("map").innerHTML = "<p>Ubicación no disponible</p>";
+        }
       } catch (error) {
         alert("Error cargando el perfil: " + error.message);
       }
